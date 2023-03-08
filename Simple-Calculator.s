@@ -8,6 +8,7 @@ prompt2: .asciiz "Enter the second number\n"
 prompt3: .asciiz "Enter the opertaion type\n"
 
 resultPrompt: .asciiz "The result is\n"
+newLine: .asciiz "\n"
 # -----------------------------------------------------
 # text/code section
 .text
@@ -39,6 +40,7 @@ syscall
 
 move $s1, $v0   # Move the value taken by user to Register s1
 # -----------------------------------------------------
+invalidInput:
 la $a0, prompt3 # Load prompt 3 into argument list for syscall
 
 li $v0, 4       # Load call code for printing a string to the console
@@ -49,12 +51,41 @@ syscall
 
 move $s2, $v0   # Move the value taken by user to Register s2
 # -----------------------------------------------------
-la $a0, resultPrompt # Load the result prompt into argument list
-li $v0, 4       # Load call code for printing a string to the console
-syscall         # Run the same operation with different argument
+beq $s2, 3, exit # Exit program if user enters 3
+beq $s2, 0, addVals # Add the two numbers if user enters 0
+beq $s2, 1, subVals # Subtract the two numbers if user enters 1
+beq $s2, 2, mulVals # Multiply the two numbers if user enters 2
+j invalidInput # Attempt to take input from user again of none of the 4 options were selected
 
+addVals:
+add $s3, $s0, $s1
+j doneComputing # Print the result once complete
+
+subVals:
+sub $s3, $s0, $s1
+j doneComputing # Print the result once complete
+
+mulVals:
+mulo $s3, $s0, $s1
+j doneComputing # Print the result once complete
+# -----------------------------------------------------
+doneComputing:
+la $a0, resultPrompt # Load the result prompt into argument list
+
+li $v0, 4       # Load call code for printing a string to the console
+syscall       
+
+move $a0, $s3   # Load the result of the operation to be printed
+li $v0, 1       # Load call code for printing an integer to the console
+syscall  
+
+la $a0, newLine # Load the new line string
+li $v0, 4       # Load call code for printing a string to the console
+syscall
+
+j main          # Jump back to main once completed
 # -----
-# Done, terminate program.
+exit:       # Done, terminate program.
 li $v0, 10  # Load call code for terminating a program
 syscall     # Run operation specified at v0
 .end main
